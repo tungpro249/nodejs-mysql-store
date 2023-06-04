@@ -1,7 +1,7 @@
 const dbConn = require("../config");
 
-const getAllProducts = (req, res) => {
-    dbConn.query('SELECT * FROM products', (error, results, fields) => {
+const getAllCategories = (req, res) => {
+    dbConn.query('SELECT * FROM categories', (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi lấy dữ liệu sản phẩm: ' + error.stack);
             res.status(500).send('Lỗi khi lấy dữ liệu sản phẩm.');
@@ -13,11 +13,10 @@ const getAllProducts = (req, res) => {
     });
 };
 
-const addNewProduct = (req, res) => {
-    const {name, description, image, price, quantity, category_id} = req.body;
-    const product = {name, description, image, price, quantity, category_id};
-    console.log(product)
-    dbConn.query('INSERT INTO products SET ?', product, (error, results, fields) => {
+const addNewCategory = (req, res) => {
+    const { name } = req.body;
+    const category = { name };
+    dbConn.query('INSERT INTO categories SET ?', category, (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi thêm sản phẩm mới: ' + error.stack);
             res.status(500).send('Lỗi khi thêm sản phẩm mới.');
@@ -25,15 +24,15 @@ const addNewProduct = (req, res) => {
         }
         console.log('Thêm sản phẩm mới thành công.');
         // Trả về thông tin sản phẩm mới vừa thêm
-        res.json({id: results.insertId, ...product});
+        res.json({id: results.insertId, ...category});
     })
 }
 
-const updateProduct = (req, res) => {
+const updateCategory = (req, res) => {
     const id = req.params.id;
-    const { name, description, image, price, quantity, category_id } = req.body;
-    const product = { name, description, image, price, quantity, category_id };
-    dbConn.query('UPDATE products SET ? WHERE id = ?', [product, id], (error, results, fields) => {
+    const { name } = req.body;
+    const product = { name };
+    dbConn.query('UPDATE categories SET ? WHERE id = ?', [product, id], (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi cập nhật sản phẩm: ' + error.stack);
             res.status(500).send('Lỗi khi cập nhật sản phẩm.');
@@ -45,4 +44,4 @@ const updateProduct = (req, res) => {
     });
 }
 
-module.exports = {  getAllProducts, addNewProduct, updateProduct };
+module.exports = {  getAllCategories, addNewCategory, updateCategory };
