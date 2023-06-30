@@ -44,14 +44,14 @@ const loginUser = (req, res) => {
         if (err) {
             res.status(500).json({ message: "SERVER_ERROR" });
         } else if (results.length === 0) {
-            res.status(401).json({ message: "EMAIL_OR_PASSWORD_ERROR" });
+            res.status(401).json({ code: 0, message: "EMAIL_OR_PASSWORD_ERROR" });
         } else {
             const hashedPassword = results[0].pass_word;
             bcrypt.compare(pass_word, hashedPassword, (err, isMatch) => {
                 if (err) {
-                    res.status(500).json({ message: "SERVER_ERROR" });
+                    res.status(500).json({ code: 0,message: "SERVER_ERROR" });
                 } else if (!isMatch) {
-                    res.status(401).json({ message: "EMAIL_OR_PASSWORD_ERROR" });
+                    res.status(401).json({code: 0, message: "EMAIL_OR_PASSWORD_ERROR" });
                 } else {
                     const data = {
                         email: results[0].email,
@@ -60,7 +60,7 @@ const loginUser = (req, res) => {
                         phone: results[0].phone,
                     };
                     const token = jwt.sign({ data }, process.env.SECRET_KEY, { expiresIn: "1h" });
-                    res.status(200).json({ message: "LOGIN_SUCCESS", token: token, data: data });
+                    res.status(200).json({ code: 1, message: "LOGIN_SUCCESS", token: token, data: data });
                 }
             });
         }
