@@ -59,6 +59,11 @@ const loginUser = (req, res) => {
                         first_name: results[0].first_name,
                         phone: results[0].phone,
                     };
+                    if (results[0].role === "admin") {
+                        data.isAdmin = true;
+                    } else {
+                        data.isAdmin = false;
+                    }
                     const token = jwt.sign({ data }, process.env.SECRET_KEY, { expiresIn: "1h" });
                     res.status(200).json({ code: 1, message: "LOGIN_SUCCESS", token: token, data: data });
                 }
