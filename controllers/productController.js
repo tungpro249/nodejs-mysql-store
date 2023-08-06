@@ -44,5 +44,18 @@ const updateProduct = (req, res) => {
         res.json({ id, ...product });
     });
 }
+const deleteProduct = (req, res) => {
+    console.log("dcm vao day")
+    const id = req.params.id;
+    dbConn.query('DELETE FROM products WHERE id = ?', id, (error, results, fields) => {
+        if (error) {
+            console.error('Lỗi khi xóa sản phẩm: ' + error.stack);
+            res.status(500).send('Lỗi khi xóa sản phẩm.');
+            return;
+        }
+        console.log('Xóa sản phẩm thành công.');
+        res.sendStatus(200);
+    });
+};
 
-module.exports = {  getAllProducts, addNewProduct, updateProduct };
+module.exports = {  getAllProducts, addNewProduct, updateProduct, deleteProduct };

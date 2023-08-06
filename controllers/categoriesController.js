@@ -44,4 +44,16 @@ const updateCategory = (req, res) => {
     });
 }
 
-module.exports = {  getAllCategories, addNewCategory, updateCategory };
+const deleteCategory = (req, res) => {
+    const id = req.params.id;
+    dbConn.query('DELETE FROM categories WHERE id = ?', id, (error, results, fields) => {
+        if (error) {
+            console.error('Lỗi khi xóa danh mục: ' + error.stack);
+            res.status(500).send('Lỗi khi xóa danh mục.');
+            return;
+        }
+        console.log('Xóa danh mục thành công.');
+        res.status(200).json({"message": "Xóa danh mục thành công."});
+    });
+};
+module.exports = {  getAllCategories, addNewCategory, updateCategory, deleteCategory };
