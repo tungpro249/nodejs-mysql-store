@@ -59,7 +59,9 @@ const loginUser = (req, res) => {
                         first_name: results[0].first_name,
                         phone: results[0].phone,
                     };
-                    if (results[0].role === "admin") {
+                    console.log(results[0].role)
+                    if (results[0].role === 1) {
+                        console.log("dcm")
                         data.isAdmin = true;
                     } else {
                         data.isAdmin = false;
