@@ -11,19 +11,19 @@ const getAllProducts = (req, res) => {
         res.json(results);
     });
 };
+
 const getProductDetails = (req, res) => {
     const productId = req.params.id;
-
     const query = `SELECT * FROM products WHERE id = ?`;
 
     dbConn.query(query, [productId], (error, results) => {
         if (error) {
-            console.error("Error retrieving product details:", error);
-            return res.status(500).json({ error: "Internal server error" });
+            console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+            return res.status(500).json({ error: "Lỗi máy chủ nội bộ" });
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ error: "Product not found" });
+            return res.status(404).json({ error: "Không tìm thấy sản phẩm" });
         }
 
         const product = results[0];
@@ -32,9 +32,9 @@ const getProductDetails = (req, res) => {
 };
 
 const addNewProduct = (req, res) => {
-    const {name, description, image, price, quantity, category_id} = req.body;
-    const product = {name, description, image, price, quantity, category_id};
-    console.log(product)
+    const { name, description, image, price, quantity, category_id } = req.body;
+    const product = { name, description, image, price, quantity, category_id };
+
     dbConn.query('INSERT INTO products SET ?', product, (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi thêm sản phẩm mới: ' + error.stack);
@@ -43,14 +43,15 @@ const addNewProduct = (req, res) => {
         }
         console.log('Thêm sản phẩm mới thành công.');
         // Trả về thông tin sản phẩm mới vừa thêm
-        res.json({id: results.insertId, ...product});
-    })
-}
+        res.status(200).json({ message: 'Thêm sản phẩm mới thành công.', data: { id: results.insertId, ...product } });
+    });
+};
 
 const updateProduct = (req, res) => {
     const id = req.params.id;
     const { name, description, image, price, quantity, category_id } = req.body;
     const product = { name, description, image, price, quantity, category_id };
+
     dbConn.query('UPDATE products SET ? WHERE id = ?', [product, id], (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi cập nhật sản phẩm: ' + error.stack);
@@ -59,11 +60,13 @@ const updateProduct = (req, res) => {
         }
         console.log('Cập nhật sản phẩm thành công.');
         // Trả về thông tin sản phẩm đã được cập nhật
-        res.json({ id, ...product });
+        res.status(200).json({ message: 'Cập nhật sản phẩm thành công.', data: { id, ...product } });
     });
-}
+};
+
 const deleteProduct = (req, res) => {
     const id = req.params.id;
+
     dbConn.query('DELETE FROM products WHERE id = ?', id, (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi xóa sản phẩm: ' + error.stack);
@@ -71,8 +74,8 @@ const deleteProduct = (req, res) => {
             return;
         }
         console.log('Xóa sản phẩm thành công.');
-        res.sendStatus(200);
+        res.status(200).json({ message: 'Xóa sản phẩm thành công.' });
     });
 };
 
-module.exports = {  getAllProducts,getProductDetails, addNewProduct, updateProduct, deleteProduct };
+module.exports = { getAllProducts, getProductDetails, addNewProduct, updateProduct, deleteProduct };
