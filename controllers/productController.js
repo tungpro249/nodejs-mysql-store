@@ -7,9 +7,27 @@ const getAllProducts = (req, res) => {
             res.status(500).send('Lỗi khi lấy dữ liệu sản phẩm.');
             return;
         }
-        console.log('Lấy dữ liệu sản phẩm thành công.');
         // Trả về danh sách sản phẩm
         res.json(results);
+    });
+};
+const getProductDetails = (req, res) => {
+    const productId = req.params.id;
+
+    const query = `SELECT * FROM products WHERE id = ?`;
+
+    dbConn.query(query, [productId], (error, results) => {
+        if (error) {
+            console.error("Error retrieving product details:", error);
+            return res.status(500).json({ error: "Internal server error" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        const product = results[0];
+        res.json(product);
     });
 };
 
@@ -45,7 +63,6 @@ const updateProduct = (req, res) => {
     });
 }
 const deleteProduct = (req, res) => {
-    console.log("dcm vao day")
     const id = req.params.id;
     dbConn.query('DELETE FROM products WHERE id = ?', id, (error, results, fields) => {
         if (error) {
@@ -58,4 +75,4 @@ const deleteProduct = (req, res) => {
     });
 };
 
-module.exports = {  getAllProducts, addNewProduct, updateProduct, deleteProduct };
+module.exports = {  getAllProducts,getProductDetails, addNewProduct, updateProduct, deleteProduct };
