@@ -1,5 +1,6 @@
 const { hashPassword, comparePassword } = require("../utils/authUtils");
 const { selectUserByEmail, insertUser } = require("../queries/userQueries");
+const dbConn = require("../config");
 const jwt = require("jsonwebtoken");
 
 const saltRounds = 10;
@@ -66,7 +67,53 @@ const loginUser = async (req, res) => {
     }
 };
 
+const changePassword = async (req, res) => {
+    try {
+        const { email, old_password, new_password } = req.body;
+
+        // Lệnh SQL để lấy mật khẩu hiện tại từ cơ sở dữ liệu
+        const selectSql = `SELECT pass_word FROM users WHERE email = ?`;
+
+        dbConn.query(selectSql, email, async (error, results) => {
+            if (error) {
+                console.error("Error selecting user password:", error);
+                res.status(500).json({ message: "SERVER_ERROR", data: null });
+            } else {
+                if (results.length === 0) {
+                    return res.status(401).json({ message: "Người dùng không tồn tại" });
+                }
+
+                const hashedPassword = results[0].pass_word;
+
+                // Kiểm tra old_password với mật khẩu hiện tại từ cơ sở dữ liệu
+                const isMatch = await comparePassword(old_password, hashedPassword);
+                if (!isMatch) {
+                    return res.status(401).json({ message: "Mật khẩu cũ không đúng" });
+                }
+
+                // Lệnh SQL để cập nhật mật khẩu mới
+                const updateSql = `UPDATE users SET pass_word = ? WHERE email = ?`;
+                const hashedNewPassword = await hashPassword(new_password, saltRounds);
+                const updateValues = [hashedNewPassword, email];
+
+                dbConn.query(updateSql, updateValues, (error, results) => {
+                    if (error) {
+                        console.error("Error changing password:", error);
+                        res.status(500).json({ message: "SERVER_ERROR" });
+                    } else {
+                        res.status(200).json({ message: "Thay đổi mật khẩu thành công" });
+                    }
+                });
+            }
+        });
+    } catch (error) {
+        console.error("Error changing password:", error);
+        res.status(500).json({ message: "SERVER_ERROR" });
+    }
+};
+
 module.exports = {
     addNewUser,
-    loginUser
+    loginUser,
+    changePassword
 };
