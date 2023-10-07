@@ -70,7 +70,6 @@ const loginUser = async (req, res) => {
 const changePassword = async (req, res) => {
     try {
         const { email, old_password, new_password } = req.body;
-
         // Lệnh SQL để lấy mật khẩu hiện tại từ cơ sở dữ liệu
         const selectSql = `SELECT pass_word FROM users WHERE email = ?`;
 
