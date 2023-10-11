@@ -1,5 +1,22 @@
 const dbConn = require("../config");
+const multer = require('multer');
 
+
+// Định nghĩa cấu hình cho multer
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/'); // Thư mục lưu trữ hình ảnh
+    },
+    filename: function (req, file, cb) {
+        // Tạo tên file mới bằng cách kết hợp timestamp và tên file gốc
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const fileExtension = file.originalname.split('.').pop();
+        cb(null, file.fieldname + '-' + uniqueSuffix + '.' + fileExtension);
+    }
+});
+
+// Khởi tạo middleware multer với cấu hình
+const upload = multer({ storage: storage });
 
 const getAllProducts = (req, res) => {
     dbConn.query(
@@ -50,8 +67,14 @@ const getProductDetails = (req, res) => {
 };
 
 const addNewProduct = (req, res) => {
-    const { name, description, image, price, quantity, category_id } = req.body;
-    const product = { name, description, image, price, quantity, category_id };
+    const { name, description, price, quantity, category_id } = req.body;
+    const product = { name, description, price, quantity, category_id };
+    const created_at = new Date(); // Lấy thời gian hiện tại
+
+    product.created_at = created_at;
+    // Lưu trữ đường dẫn hình ảnh vào biến imageUrl
+    const imageUrl = req.file ? req.file.path : null;
+    product.image = imageUrl;
 
     dbConn.query('INSERT INTO products SET ?', product, (error, results, fields) => {
         if (error) {
@@ -67,8 +90,12 @@ const addNewProduct = (req, res) => {
 
 const updateProduct = (req, res) => {
     const id = req.params.id;
-    const { name, description, image, price, quantity, category_id } = req.body;
-    const product = { name, description, image, price, quantity, category_id };
+    const { name, description, price, quantity, category_id } = req.body;
+    const product = { name, description, price, quantity, category_id };
+    // Lưu trữ đường dẫn hình ảnh vào biến imageUrl
+    const imageUrl = req.file ? req.file.path : null;
+    product.image = imageUrl;
+
 
     dbConn.query('UPDATE products SET ? WHERE id = ?', [product, id], (error, results, fields) => {
         if (error) {
@@ -96,4 +123,4 @@ const deleteProduct = (req, res) => {
     });
 };
 
-module.exports = { getAllProducts, getProductDetails, addNewProduct, updateProduct, deleteProduct };
+module.exports = { getAllProducts, getProductDetails, addNewProduct, updateProduct, deleteProduct, upload };
