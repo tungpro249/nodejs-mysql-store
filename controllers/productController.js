@@ -92,6 +92,9 @@ const updateProduct = (req, res) => {
     const id = req.params.id;
     const { name, description, price, quantity, category_id } = req.body;
     const product = { name, description, price, quantity, category_id };
+    const created_at = new Date(); // Lấy thời gian hiện tại
+
+    product.created_at = created_at;
     // Lưu trữ đường dẫn hình ảnh vào biến imageUrl
     const imageUrl = req.file ? req.file.path : null;
     product.image = imageUrl;
