@@ -44,7 +44,7 @@ const getCart = (req, res) => {
             throw error;
         }
         dbConn.query(
-            'SELECT * FROM cart_items WHERE cart_id = ?',
+            'SELECT ci.*, p.name, p.image, p.price FROM cart_items ci INNER JOIN products p ON ci.product_id = p.id WHERE ci.cart_id = ?',
             [cartId],
             (error, results) => {
                 if (error) {

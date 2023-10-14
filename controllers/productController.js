@@ -46,10 +46,12 @@ const getAllProducts = (req, res) => {
         }
     );
 };
-
 const getProductDetails = (req, res) => {
     const productId = req.params.id;
-    const query = `SELECT * FROM products WHERE id = ?`;
+    const query = `SELECT p.id, p.name, p.description, p.image, p.quantity, p.price, c.id as category_id, c.name as category_name
+                   FROM products p
+                   JOIN categories c ON p.category_id = c.id
+                   WHERE p.id = ?`;
 
     dbConn.query(query, [productId], (error, results) => {
         if (error) {
@@ -62,10 +64,19 @@ const getProductDetails = (req, res) => {
         }
 
         const product = results[0];
-        res.json(product);
+        const transformedProduct = {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            image: product.image,
+            quantity: product.quantity,
+            price: product.price,
+            category: { id: product.category_id, name: product.category_name }
+        };
+
+        res.json(transformedProduct);
     });
 };
-
 const addNewProduct = (req, res) => {
     const { name, description, price, quantity, category_id } = req.body;
     const product = { name, description, price, quantity, category_id };

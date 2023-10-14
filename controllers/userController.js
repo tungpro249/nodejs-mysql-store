@@ -2,6 +2,8 @@ const { hashPassword, comparePassword } = require("../utils/authUtils");
 const { selectUserByEmail, insertUser } = require("../queries/userQueries");
 const dbConn = require("../config");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const crypto = require('crypto');
 
 const saltRounds = 10;
 const secretKey = process.env.SECRET_KEY;
@@ -47,6 +49,7 @@ const loginUser = async (req, res) => {
         }
 
         const data = {
+            id: user[0].id,
             email: user[0].email,
             last_name: user[0].last_name,
             first_name: user[0].first_name,
@@ -110,9 +113,141 @@ const changePassword = async (req, res) => {
         res.status(500).json({ message: "SERVER_ERROR" });
     }
 };
+// Hàm kiểm tra email có tồn tại trong cơ sở dữ liệu không
+const checkEmailExists = (email) => {
+    return new Promise((resolve, reject) => {
+        dbConn.query(
+            'SELECT * FROM users WHERE email = ?',
+            [email],
+            (error, results) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results.length > 0);
+                }
+            }
+        );
+    });
+};
+
+// Function to generate a reset token and save it in the user's generate_code field
+const generateResetToken = async (email) => {
+    try {
+        const resetToken = crypto.randomBytes(20).toString('hex'); // Generate a random token
+        const updateSql = 'UPDATE users SET generate_code = ? WHERE email = ?';
+
+        await dbConn.query(updateSql, [resetToken, email]); // Save the reset token to the generate_code field
+
+        return resetToken;
+    } catch (error) {
+        throw new Error('Failed to generate reset token: ' + error.message);
+    }
+};
+
+// Hàm kiểm tra tính hợp lệ của resetToken
+const validateResetToken = (resetToken) => {
+    // Tạo logic kiểm tra tính hợp lệ của resetToken dựa trên yêu cầu của bạn
+};
+
+// Hàm cập nhật mật khẩu mới cho người dùng
+const updatePassword = (email, newPassword) => {
+    return new Promise((resolve, reject) => {
+        dbConn.query(
+            'UPDATE users SET password = ? WHERE email = ?',
+            [newPassword, email],
+            (error, results) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            }
+        );
+    });
+};
+
+// Hàm gửi email khôi phục mật khẩu
+const sendPasswordResetEmail = async (email, resetToken) => {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'your_email.com',
+            pass: 'your_pass',
+        },
+    });
+
+    const mailOptions = {
+        from: 'Doan Thanh Tùng',
+        to: email,
+        subject: 'Khôi phục mật khẩu',
+        text: `Vui lòng truy cập đường dẫn sau để khôi phục mật khẩu: ${resetToken}`,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully');
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+};
+
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu không
+        const emailExists = await checkEmailExists(email);
+        if (!emailExists) {
+            return res.status(404).json({ message: 'EMAIL_NOT_FOUND' });
+        }
+
+        // Tạo một mã token để khôi phục mật khẩu
+        const resetToken = await generateResetToken(email);
+
+        // Gửi email khôi phục mật khẩu đến người dùng
+        await sendPasswordResetEmail(email, resetToken);
+
+        res.status(200).json({ message: 'RESET_EMAIL_SENT' });
+    } catch (error) {
+        console.error('Error requesting password reset:', error);
+        res.status(500).json({ message: 'SERVER_ERROR' });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, resetToken, newPassword } = req.body;
+
+        const emailExists = await checkEmailExists(email);
+        if (!emailExists) {
+            return res.status(404).json({ message: 'USER_NOT_FOUND' });
+        }
+
+        // Kiểm tra tính hợp lệ của resetToken (thêm logic vào hàm validateResetToken)
+
+        const selectSql = 'SELECT * FROM users WHERE email = ? AND generate_code = ?';
+        const [rows] = await dbConn.query(selectSql, [email, resetToken]);
+        if (rows.length === 0) {
+            return res.status(400).json({ message: 'INVALID_RESET_TOKEN' });
+        }
+
+        await updatePassword(email, newPassword); // Update thepassword directly using the email
+
+        // Clear the generate_code field after password reset
+        const updateSql = 'UPDATE users SET generate_code = NULL WHERE email = ?';
+        await dbConn.query(updateSql, [email]);
+
+        res.status(200).json({ message: 'PASSWORD_RESET_SUCCESSFUL' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ message: 'SERVER_ERROR' });
+    }
+};
 
 module.exports = {
     addNewUser,
     loginUser,
-    changePassword
+    changePassword,
+    forgotPassword,
+    resetPassword
 };
