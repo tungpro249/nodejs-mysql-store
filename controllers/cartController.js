@@ -44,18 +44,19 @@ const getCart = (req, res) => {
             throw error;
         }
         dbConn.query(
-            'SELECT ci.*, p.name, p.image, p.price FROM cart_items ci INNER JOIN products p ON ci.product_id = p.id WHERE ci.cart_id = ?',
+            'SELECT ci.*, p.name, p.image, p.price, (ci.quantity * p.price) AS total FROM cart_items ci INNER JOIN products p ON ci.product_id = p.id WHERE ci.cart_id = ?',
             [cartId],
             (error, results) => {
                 if (error) {
                     throw error;
                 }
-                res.json(results);
+                // Tính tổng số tiền của giỏ hàng
+                const totalAmount = results.reduce((total, item) => total + (item.total || 0), 0);
+                res.json({ cartItems: results, totalAmount });
             }
         );
     });
 };
-
 // Thêm sản phẩm vào giỏ hàng
 const addToCart = (req, res) => {
     const userId = req.params.userId;
@@ -90,7 +91,7 @@ const updateCartItem = (req, res) => {
             if (error) {
                 throw error;
             }
-            res.send('Cart item updated successfully.');
+            res.status(200).json({ message: 'Cập nhật số lượng thành công.', data: { quantity } });
         }
     );
 };

@@ -113,6 +113,7 @@ const changePassword = async (req, res) => {
         res.status(500).json({ message: "SERVER_ERROR" });
     }
 };
+
 // Hàm kiểm tra email có tồn tại trong cơ sở dữ liệu không
 const checkEmailExists = (email) => {
     return new Promise((resolve, reject) => {

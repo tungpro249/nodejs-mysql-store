@@ -77,10 +77,11 @@ const getProductDetails = (req, res) => {
         res.json(transformedProduct);
     });
 };
+
 const addNewProduct = (req, res) => {
     const { name, description, price, quantity, category_id } = req.body;
     const product = { name, description, price, quantity, category_id };
-    const created_at = new Date(); // Lấy thời gian hiện tại
+    const created_at = new Date();
 
     product.created_at = created_at;
     // Lưu trữ đường dẫn hình ảnh vào biến imageUrl
@@ -94,8 +95,19 @@ const addNewProduct = (req, res) => {
             return;
         }
         console.log('Thêm sản phẩm mới thành công.');
-        // Trả về thông tin sản phẩm mới vừa thêm
-        res.status(200).json({ message: 'Thêm sản phẩm mới thành công.', data: { id: results.insertId, ...product } });
+
+        // Thêm đường dẫn hình ảnh vào cơ sở dữ liệu
+        const productId = results.insertId;
+        dbConn.query('UPDATE products SET image = ? WHERE id = ?', [imageUrl, productId], (error, results, fields) => {
+            if (error) {
+                console.error('Lỗi khi cập nhật đường dẫn hình ảnh: ' + error.stack);
+                res.status(500).send('Lỗi khi cập nhật đường dẫn hình ảnh.');
+                return;
+            }
+
+            // Trả về thông tin sản phẩm mới vừa thêm
+            res.status(200).json({ message: 'Thêm sản phẩm mới thành công.', data: { id: productId, ...product, image: imageUrl } });
+        });
     });
 };
 
@@ -110,7 +122,6 @@ const updateProduct = (req, res) => {
     const imageUrl = req.file ? req.file.path : null;
     product.image = imageUrl;
 
-
     dbConn.query('UPDATE products SET ? WHERE id = ?', [product, id], (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi cập nhật sản phẩm: ' + error.stack);
@@ -118,8 +129,18 @@ const updateProduct = (req, res) => {
             return;
         }
         console.log('Cập nhật sản phẩm thành công.');
-        // Trả về thông tin sản phẩm đã được cập nhật
-        res.status(200).json({ message: 'Cập nhật sản phẩm thành công.', data: { id, ...product } });
+
+        // Cập nhật đường dẫn hình ảnh trong cơ sở dữ liệu
+        dbConn.query('UPDATE products SET image = ? WHERE id = ?', [imageUrl, id], (error, results, fields) => {
+            if (error) {
+                console.error('Lỗi khi cập nhật đường dẫn hình ảnh: ' + error.stack);
+                res.status(500).send('Lỗi khi cập nhật đường dẫn hình ảnh.');
+                return;
+            }
+
+            // Trả về thông tin sản phẩm đã được cập nhật
+            res.status(200).json({ message: 'Cập nhật sản phẩm thành công.', data: { id, ...product, image: imageUrl } });
+        });
     });
 };
 
