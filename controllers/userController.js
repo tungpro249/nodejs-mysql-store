@@ -172,13 +172,13 @@ const sendPasswordResetEmail = async (email, resetToken) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'your_email.com',
-            pass: 'your_pass',
+            user: process.env.YOUR_EMAIL,
+            pass: process.env.YOUR_PASS_OF_APP,
         },
     });
 
     const mailOptions = {
-        from: 'Doan Thanh Tùng',
+        from: 'Đoàn Thanh Tùng',
         to: email,
         subject: 'Khôi phục mật khẩu',
         text: `Vui lòng truy cập đường dẫn sau để khôi phục mật khẩu: ${resetToken}`,
