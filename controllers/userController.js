@@ -176,12 +176,13 @@ const sendPasswordResetEmail = async (email, resetToken) => {
             pass: process.env.YOUR_PASS_OF_APP,
         },
     });
-
+    const resetLink = `http://localhost:3000/reset-password?email=${email}&resetToken=${resetToken}`
     const mailOptions = {
         from: 'Đoàn Thanh Tùng',
         to: email,
         subject: 'Khôi phục mật khẩu',
-        text: `Vui lòng truy cập đường dẫn sau để khôi phục mật khẩu: ${resetToken}`,
+        text: `Vui lòng truy cập đường dẫn sau để khôi phục mật khẩu:`,
+        html: `Click <a href="${resetLink}">here</a> to reset your password.`
     };
 
     try {
@@ -244,6 +245,7 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'SERVER_ERROR' });
     }
 };
+
 const changeInfo = (req, res) => {
         const { id } = req.params; // Lấy id từ URL
     console.log(id)
