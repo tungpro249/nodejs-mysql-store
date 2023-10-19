@@ -244,11 +244,29 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'SERVER_ERROR' });
     }
 };
+const changeInfo = (req, res) => {
+        const { id } = req.params; // Lấy id từ URL
+    console.log(id)
+        const { phone, first_name, last_name } = req.body;
+
+        const query = 'UPDATE users SET phone = ?, first_name = ?, last_name = ? WHERE id = ?';
+
+        // Thực thi câu truy vấn SQL
+         dbConn.query(query, [phone, first_name, last_name, id], (err, result) => {
+            if (err) {
+                console.error(err);
+                res.status(500).send('Lỗi server');
+            } else {
+                res.send('Thông tin người dùng đã được cập nhật thành công');
+            }
+        });
+};
 
 module.exports = {
     addNewUser,
     loginUser,
     changePassword,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    changeInfo
 };

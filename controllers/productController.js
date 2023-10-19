@@ -19,33 +19,50 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 const getAllProducts = (req, res) => {
-    dbConn.query(
-        `SELECT p.id, p.name, p.description, p.image, p.quantity, p.price, c.id as category_id, c.name as category_name
-    FROM products p
-    JOIN categories c ON p.category_id = c.id`,
-        (error, results, fields) => {
-            if (error) {
-                console.error('Lỗi khi lấy dữ liệu sản phẩm: ' + error.stack);
-                res.status(500).send('Lỗi khi lấy dữ liệu sản phẩm.');
-                return;
-            }
+    const { search, category } = req.query;
+    let query = `SELECT p.id, p.name, p.description, p.image, p.quantity, p.price, c.id as category_id, c.name as category_name
+               FROM products p
+               JOIN categories c ON p.category_id = c.id`;
 
-            // Transform the results to the desired format
-            const transformedResults = results.map((product) => ({
-                id: product.id,
-                name: product.name,
-                description: product.description,
-                image: product.image,
-                quantity: product.quantity,
-                price: product.price,
-                category: { id: product.category_id, name: product.category_name }
-            }));
+    const queryParams = [];
 
-            // Trả về danh sách sản phẩm
-            res.json(transformedResults);
+    if (search) {
+        query += ' WHERE LOWER(p.name) LIKE ?';
+        queryParams.push(`%${search.toLowerCase()}%`);
+    }
+
+    if (category) {
+        if (queryParams.length > 0) {
+            query += ' AND c.id = ?';
+        } else {
+            query += ' WHERE c.id = ?';
         }
-    );
+        queryParams.push(category);
+    }
+
+    dbConn.query(query, queryParams, (error, results, fields) => {
+        if (error) {
+            console.error('Lỗi khi lấy dữ liệu sản phẩm: ' + error.stack);
+            res.status(500).send('Lỗi khi lấy dữ liệu sản phẩm.');
+            return;
+        }
+
+        // Transform the results to the desired format
+        const transformedResults = results.map((product) => ({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            image: product.image,
+            quantity: product.quantity,
+            price: product.price,
+            category: { id: product.category_id, name: product.category_name }
+        }));
+
+        // Trả về danh sách sản phẩm đã được tìm kiếm và lọc
+        res.json(transformedResults);
+    });
 };
+
 const getProductDetails = (req, res) => {
     const productId = req.params.id;
     const query = `SELECT p.id, p.name, p.description, p.image, p.quantity, p.price, c.id as category_id, c.name as category_name
