@@ -172,14 +172,14 @@ const sendPasswordResetEmail = async (email, resetToken) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.YOUR_EMAIL,
-            pass: process.env.YOUR_PASS_OF_APP,
+            user: 'tungt392@gmail.com',
+            pass: 'grjs xutf gbui nooe',
         },
     });
     const resetLink = `http://localhost:3000/reset-password?email=${email}&resetToken=${resetToken}`
     const mailOptions = {
         from: 'Đoàn Thanh Tùng',
-        to: email,
+        to: 'tungt392@gmail.com',
         subject: 'Khôi phục mật khẩu',
         text: `Vui lòng truy cập đường dẫn sau để khôi phục mật khẩu:`,
         html: `Click <a href="${resetLink}">here</a> to reset your password.`
@@ -232,8 +232,7 @@ const resetPassword = async (req, res) => {
         if (rows.length === 0) {
             return res.status(400).json({ message: 'INVALID_RESET_TOKEN' });
         }
-
-        await updatePassword(email, newPassword); // Update thepassword directly using the email
+        await updatePassword(email, newPassword); // Update the password directly using the email
 
         // Clear the generate_code field after password reset
         const updateSql = 'UPDATE users SET generate_code = NULL WHERE email = ?';

@@ -1,12 +1,10 @@
 const dbConn = require("../config");
-
 const createOrder = (req, res) => {
     try {
-        const { userId, items } = req.body;
+        const { user_id, items } = req.body;
 
         const orderQuery = 'INSERT INTO orders (user_id, date_created, status) VALUES (?, ?, ?)';
-        const orderValues = [userId, new Date(), 'Đang xử lý'];
-
+        const orderValues = [user_id, new Date(), 'Đang xử lý'];
         dbConn.query(orderQuery, orderValues, (error, result) => {
             if (error) {
                 console.error('Lỗi khi tạo đơn hàng:', error);
@@ -18,15 +16,24 @@ const createOrder = (req, res) => {
             const orderItemsQuery = 'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)';
 
             items.forEach((item) => {
-                const { productId, quantity, price } = item;
-                const orderItemsValues = [orderId, productId, quantity, price];
+                const { product_id, quantity, price } = item;
+                const orderItemsValues = [orderId, product_id, quantity, price];
 
-                db.query(orderItemsQuery, orderItemsValues, (error) => {
+                dbConn.query(orderItemsQuery, orderItemsValues, (error) => {
                     if (error) {
                         console.error('Lỗi khi tạo mặt hàng trong đơn hàng:', error);
                         return res.status(500).json({ error: 'Đã xảy ra lỗi khi tạo mặt hàng trong đơn hàng.' });
                     }
                 });
+            });
+
+            // Xóa giỏ hàng sau khi đơn hàng được tạo thành công
+            const deleteCartQuery = 'DELETE CASCADE FROM carts WHERE user_id = ?';
+            dbConn.query(deleteCartQuery, [user_id], (error) => {
+                if (error) {
+                    console.error('Lỗi khi xóa giỏ hàng:', error);
+                    return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa giỏ hàng.' });
+                }
             });
 
             res.status(201).json({ message: 'Đơn hàng đã được tạo thành công.' });
@@ -53,7 +60,7 @@ const getOrder = (req, res) => {
             }
 
             const orderItemsQuery = 'SELECT * FROM order_items WHERE order_id = ?';
-            db.query(orderItemsQuery, orderId, (error, orderItems) => {
+            dbConn.query(orderItemsQuery, orderId, (error, orderItems) => {
                 if (error) {
                     console.error('Lỗi khi lấy thông tin mặt hàng trong đơn hàng:', error);
                     return res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy thông tin mặt hàng trong đơn hàng.' });
@@ -65,6 +72,42 @@ const getOrder = (req, res) => {
     } catch (error) {
         console.error('Lỗi khi lấy thông tin đơn hàng:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy thông tin đơn hàng.' });
+    }
+};
+
+const getAllOrders = (req, res) => {
+    try {
+        const query = `
+            SELECT orders.*, CONCAT(users.last_name, ' ', users.first_name) AS user_name, order_items.quantity, order_items.price, products.name AS product_name
+            FROM orders
+            JOIN users ON orders.user_id = users.id
+            JOIN order_items ON orders.id = order_items.order_id
+            JOIN products ON order_items.product_id = products.id
+        `;
+        dbConn.query(query, (error, results) => {
+            if (error) {
+                console.error('Lỗi khi lấy thông tin tất cả đơn hàng:', error);
+                return res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy thông tin tất cả đơn hàng.' });
+            }
+
+            const orders = results.map((result) => {
+                return {
+                    id: result.id,
+                    user_id: result.user_id,
+                    user_name: result.user_name,
+                    quantity: result.quantity,
+                    price: result.price,
+                    date_created: result.date_created,
+                    status: result.status,
+                    product_name: result.product_name,
+                };
+            });
+
+            res.status(200).json({ orders });
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin tất cả đơn hàng:', error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy thông tin tất cả đơn hàng.' });
     }
 };
 
@@ -120,5 +163,5 @@ const deleteOrder = (req, res) => {
 };
 
 module.exports = {
-    createOrder, getOrder, updateOrder, deleteOrder
+    createOrder, getOrder, updateOrder, deleteOrder,getAllOrders
 }
