@@ -75,6 +75,46 @@ const getOrder = (req, res) => {
     }
 };
 
+const getOrderDetails = (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const query = `
+      SELECT users.first_name, users.last_name, users.email, users.phone, products.name AS product_name, order_items.quantity, order_items.price, orders.status
+      FROM orders
+      JOIN users ON orders.user_id = users.id
+      JOIN order_items ON orders.id = order_items.order_id
+      JOIN products ON order_items.product_id = products.id
+      WHERE users.id = ?
+    `;
+        dbConn.query(query, userId, (error, results) => {
+            if (error) {
+                console.error('Lỗi khi lấy thông tin đơn hàng:', error);
+                return res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy thông tin đơn hàng.' });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({ error: 'Không tìm thấy đơn hàng.' });
+            }
+
+            const orderDetails = {
+                user_name: `${results[0].first_name} ${results[0].last_name}`,
+                email: results[0].email,
+                phone_number: results[0].phone,
+                product_name: results[0].product_name,
+                quantity: results[0].quantity,
+                price: results[0].price,
+                status: results[0].status,
+            };
+
+            res.status(200).json({ orderDetails });
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin đơn hàng:', error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy thông tin đơn hàng.' });
+    }
+};
+
 const getAllOrders = (req, res) => {
     try {
         const query = `
@@ -163,5 +203,5 @@ const deleteOrder = (req, res) => {
 };
 
 module.exports = {
-    createOrder, getOrder, updateOrder, deleteOrder,getAllOrders
+    createOrder, getOrder, updateOrder, deleteOrder,getAllOrders, getOrderDetails
 }
