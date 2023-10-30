@@ -5,6 +5,7 @@ const createOrder = (req, res) => {
 
         const orderQuery = 'INSERT INTO orders (user_id, date_created, status) VALUES (?, ?, ?)';
         const orderValues = [user_id, new Date(), 'Đang xử lý'];
+
         dbConn.query(orderQuery, orderValues, (error, result) => {
             if (error) {
                 console.error('Lỗi khi tạo đơn hàng:', error);
@@ -28,15 +29,24 @@ const createOrder = (req, res) => {
             });
 
             // Xóa giỏ hàng sau khi đơn hàng được tạo thành công
-            const deleteCartQuery = 'DELETE CASCADE FROM carts WHERE user_id = ?';
-            dbConn.query(deleteCartQuery, [user_id], (error) => {
+            const deleteCartItemsQuery = 'DELETE FROM cart_items WHERE cart_id IN (SELECT id FROM carts WHERE user_id = ?)';
+            dbConn.query(deleteCartItemsQuery, [user_id], (error) => {
                 if (error) {
-                    console.error('Lỗi khi xóa giỏ hàng:', error);
-                    return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa giỏ hàng.' });
+                    console.error('Lỗi khi xóa mặt hàng trong giỏ hàng:', error);
+                    return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa mặt hàng trong giỏ hàng.' });
                 }
-            });
 
-            res.status(201).json({ message: 'Đơn hàng đã được tạo thành công.' });
+                // Once the associated cart items are deleted, you can proceed to delete the cart
+                const deleteCartQuery = 'DELETE FROM carts WHERE user_id = ?';
+                dbConn.query(deleteCartQuery, [user_id], (error) => {
+                    if (error) {
+                        console.error('Lỗi khi xóa giỏ hàng:', error);
+                        return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa giỏ hàng.' });
+                    }
+
+                    res.status(201).json({ message: 'Đơn hàng đã được tạo thành công.' });
+                });
+            });
         });
     } catch (error) {
         console.error('Lỗi khi tạo đơn hàng:', error);
