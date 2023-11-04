@@ -18,6 +18,7 @@ const addNewUser = async (req, res) => {
             last_name: req.body.last_name,
             first_name: req.body.first_name,
             phone: req.body.phone,
+            address: req.body.address,
         };
 
         const existingUser = await selectUserByEmail(data.email);
@@ -54,6 +55,7 @@ const loginUser = async (req, res) => {
             last_name: user[0].last_name,
             first_name: user[0].first_name,
             phone: user[0].phone,
+            address: user[0].address,
         };
 
         if (user[0].role === 1) {
@@ -147,17 +149,26 @@ const generateResetToken = async (email) => {
 
 // Hàm kiểm tra tính hợp lệ của resetToken
 const validateResetToken = (resetToken) => {
-    // Tạo logic kiểm tra tính hợp lệ của resetToken dựa trên yêu cầu của bạn
+    console.log("vao day")
+    return new Promise((resolve, reject) => {
+        // Thực hiện kiểm tra tính hợp lệ của resetToken ở đây
+        // Ví dụ: Kiểm tra trong cơ sở dữ liệu xem resetToken có tồn tại và chưa hết hạn hay không
+
+        // Giả sử resetToken hợp lệ nếu nó khác null và độ dài của resetToken lớn hơn 0
+        const isValidToken = resetToken !== null && resetToken.length > 0;
+        resolve(isValidToken); // Trả về kết quả tính hợp lệ của resetToken
+    });
 };
 
 // Hàm cập nhật mật khẩu mới cho người dùng
 const updatePassword = (email, newPassword) => {
     return new Promise((resolve, reject) => {
         dbConn.query(
-            'UPDATE users SET password = ? WHERE email = ?',
+            'UPDATE users SET pass_word = ? WHERE email = ?',
             [newPassword, email],
             (error, results) => {
                 if (error) {
+                    console.log("dcm")
                     reject(error);
                 } else {
                     resolve();
@@ -225,7 +236,10 @@ const resetPassword = async (req, res) => {
             return res.status(404).json({ message: 'USER_NOT_FOUND' });
         }
 
-        // Kiểm tra tính hợp lệ của resetToken (thêm logic vào hàm validateResetToken)
+        const isValidToken = await validateResetToken(resetToken);
+        if (!isValidToken) {
+            return res.status(400).json({ message: 'INVALID_RESET_TOKEN' });
+        }
 
         const selectSql = 'SELECT * FROM users WHERE email = ? AND generate_code = ?';
         const [rows] = await dbConn.query(selectSql, [email, resetToken]);
@@ -234,7 +248,6 @@ const resetPassword = async (req, res) => {
         }
         await updatePassword(email, newPassword); // Update the password directly using the email
 
-        // Clear the generate_code field after password reset
         const updateSql = 'UPDATE users SET generate_code = NULL WHERE email = ?';
         await dbConn.query(updateSql, [email]);
 
