@@ -260,13 +260,12 @@ const resetPassword = async (req, res) => {
 
 const changeInfo = (req, res) => {
         const { id } = req.params; // Lấy id từ URL
-    console.log(id)
-        const { phone, first_name, last_name } = req.body;
+        const { phone, first_name, last_name, address } = req.body;
 
-        const query = 'UPDATE users SET phone = ?, first_name = ?, last_name = ? WHERE id = ?';
+        const query = 'UPDATE users SET phone = ?, first_name = ?, last_name = ?, address = ? WHERE id = ?';
 
         // Thực thi câu truy vấn SQL
-         dbConn.query(query, [phone, first_name, last_name, id], (err, result) => {
+         dbConn.query(query, [phone, first_name, last_name,address, id], (err, result) => {
             if (err) {
                 console.error(err);
                 res.status(500).send('Lỗi server');
@@ -276,11 +275,39 @@ const changeInfo = (req, res) => {
         });
 };
 
+
+const getInfo = (req, res) => {
+    const { id } = req.params; // Lấy id từ URL
+
+    const query = `SELECT * FROM users WHERE id = ?`;
+
+    // Thực thi câu truy vấn SQL
+    dbConn.query(query, [id], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Lỗi server');
+        } else {
+            const user = result[0];
+            const userInfo = {
+                id: user.id,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                phone: user.phone,
+                email: user.email,
+                address: user.address
+            };
+
+            res.json(userInfo);
+        }
+    });
+};
+
 module.exports = {
     addNewUser,
     loginUser,
     changePassword,
     forgotPassword,
     resetPassword,
-    changeInfo
+    changeInfo,
+    getInfo
 };

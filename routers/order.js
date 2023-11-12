@@ -1,5 +1,5 @@
 const express = require('express');
-const {createOrder, getOrder, updateOrder, deleteOrder, getAllOrders, getOrderDetails} = require("../controllers/orderController");
+const {createOrder, getOrder, updateOrder, deleteOrder, getAllOrders, getOrderDetails, fuck} = require("../controllers/orderController");
 const router = express.Router();
 
 router.post('/payment', createOrder);
@@ -11,5 +11,7 @@ router.get('/orders', getAllOrders);
 router.get('/order/:id', getOrderDetails);
 router.put('/orders/:id', updateOrder);
 router.delete('/orders/:id', deleteOrder);
+
+router.post('/place-order', fuck)
 
 module.exports = router;

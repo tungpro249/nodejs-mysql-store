@@ -25,6 +25,15 @@ const createOrder = (req, res) => {
                         console.error('Lỗi khi tạo mặt hàng trong đơn hàng:', error);
                         return res.status(500).json({ error: 'Đã xảy ra lỗi khi tạo mặt hàng trong đơn hàng.' });
                     }
+
+                    // Trừ số lượng trong kho sau khi thêm thành công đơn hàng
+                    const updateProductQuantityQuery = 'UPDATE products SET quantity = quantity - ? WHERE id = ?';
+                    dbConn.query(updateProductQuantityQuery, [quantity, product_id], (error) => {
+                        if (error) {
+                            console.error('Lỗi khi cập nhật số lượng sản phẩm trong kho:', error);
+                            return res.status(500).json({ error: 'Đã xảy ra lỗi khi cập nhật số lượng sản phẩm trong kho.' });
+                        }
+                    });
                 });
             });
 
@@ -36,7 +45,7 @@ const createOrder = (req, res) => {
                     return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa mặt hàng trong giỏ hàng.' });
                 }
 
-                // Once the associated cart items are deleted, you can proceed to delete the cart
+                // Sau khi xóa các mặt hàng giỏ hàng liên quan, bạn có thể tiến hành xóa giỏ hàng
                 const deleteCartQuery = 'DELETE FROM carts WHERE user_id = ?';
                 dbConn.query(deleteCartQuery, [user_id], (error) => {
                     if (error) {
@@ -90,13 +99,13 @@ const getOrderDetails = (req, res) => {
         const userId = req.params.id;
 
         const query = `
-      SELECT users.first_name, users.last_name, users.email, users.phone, products.name AS product_name, order_items.quantity, order_items.price, orders.status
-      FROM orders
-      JOIN users ON orders.user_id = users.id
-      JOIN order_items ON orders.id = order_items.order_id
-      JOIN products ON order_items.product_id = products.id
-      WHERE users.id = ?
-    `;
+            SELECT users.first_name, users.last_name, users.email, users.phone, products.name AS product_name, order_items.quantity, order_items.price, orders.status
+            FROM orders
+            JOIN users ON orders.user_id = users.id
+            JOIN order_items ON orders.id = order_items.order_id
+            JOIN products ON order_items.product_id = products.id
+            WHERE users.id = ?
+        `;
         dbConn.query(query, userId, (error, results) => {
             if (error) {
                 console.error('Lỗi khi lấy thông tin đơn hàng:', error);
@@ -107,15 +116,17 @@ const getOrderDetails = (req, res) => {
                 return res.status(404).json({ error: 'Không tìm thấy đơn hàng.' });
             }
 
-            const orderDetails = {
-                user_name: `${results[0].first_name} ${results[0].last_name}`,
-                email: results[0].email,
-                phone_number: results[0].phone,
-                product_name: results[0].product_name,
-                quantity: results[0].quantity,
-                price: results[0].price,
-                status: results[0].status,
-            };
+            const orderDetails = results.map((result) => {
+                return {
+                    user_name: `${result.first_name} ${result.last_name}`,
+                    email: result.email,
+                    phone_number: result.phone,
+                    product_name: result.product_name,
+                    quantity: result.quantity,
+                    price: result.price,
+                    status: result.status,
+                };
+            });
 
             res.status(200).json({ orderDetails });
         });
@@ -212,6 +223,57 @@ const deleteOrder = (req, res) => {
     }
 };
 
+const fuck = (req, res) => {
+    const userData = req.body.userData; // Thông tin người dùng không có tài khoản
+    const items = req.body.items; // Danh sách các mặt hàng trong đơn hàng
+
+    // Tạo người dùng tạm thời
+    const createTempUserQuery = 'INSERT INTO users (email, first_name, last_name, pass_word) VALUES (?, ?, ?, ?)';
+    const tempEmail = userData.email;
+    const tempFirstName = userData.first_name;
+    const tempLastName = userData.last_name;
+    const tempPassword = '1'; // Giá trị mặc định cho trường pass_word
+    const userValues = [tempEmail, tempFirstName, tempLastName, tempPassword];
+
+    dbConn.query(createTempUserQuery, userValues, (error, userResult) => {
+        if (error) {
+            console.error('Lỗi khi tạo người dùng tạm thời:', error);
+            res.status(500).json({ error: 'Lỗi khi tạo người dùng tạm thời' });
+            return;
+        }
+
+        const tempUserId = userResult.insertId;
+
+        // Tạo đơn hàng
+        const createOrderQuery = 'INSERT INTO orders (user_id, date_created, status) VALUES (?, NOW(), ?)';
+        const orderValues = [tempUserId, 'Đang xử lý'];
+
+        dbConn.query(createOrderQuery, orderValues, (error, orderResult) => {
+            if (error) {
+                console.error('Lỗi khi tạo đơn hàng:', error);
+                res.status(500).json({ error: 'Lỗi khi tạo đơn hàng' });
+                return;
+            }
+
+            const orderId = orderResult.insertId;
+
+            // Tạo các mặt hàng trong đơn hàng
+            const createOrderItemsQuery = 'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?';
+            const orderItemsValues = items.map(item => [orderId, item.product_id, item.quantity, item.price]);
+
+            dbConn.query(createOrderItemsQuery, [orderItemsValues], (error, orderItemsResult) => {
+                if (error) {
+                    console.error('Lỗi khi tạo các mặt hàng trong đơn hàng:', error);
+                    res.status(500).json({ error: 'Lỗi khi tạo các mặt hàng trong đơn hàng' });
+                    return;
+                }
+
+                res.status(200).json({ orderId: orderId });
+            });
+        });
+    });
+}
+
 module.exports = {
-    createOrder, getOrder, updateOrder, deleteOrder,getAllOrders, getOrderDetails
+    createOrder, getOrder, updateOrder, deleteOrder,getAllOrders, getOrderDetails, fuck
 }
