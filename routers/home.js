@@ -29,4 +29,44 @@ router.get("/stats", (req, res) => {
     });
 });
 
+router.get('/total-incomes', (req, res) => {
+    const query = `
+    SELECT MONTH(o.date_created) AS month, SUM(oi.price * oi.quantity) AS total_income
+    FROM orders o
+    JOIN order_items oi ON o.id = oi.order_id
+    WHERE o.status = 'đang xử lý'
+    GROUP BY MONTH(o.date_created)
+  `;
+
+    dbConn.query(query, (error, results) => {
+        if (error) {
+            console.error('Lỗi truy vấn cơ sở dữ liệu: ' + error.stack);
+            res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu' });
+            return;
+        }
+
+        const monthlyIncome = Array.from({ length: 12 }, () => 0);
+        results.forEach((row) => {
+            const monthIndex = row.month - 1;
+            monthlyIncome[monthIndex] = row.total_income;
+        });
+
+        const data = {
+            labels: [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ],
+            datasets: [
+                {
+                    label: "Thống kê tổng tiền mỗi tháng",
+                    data: monthlyIncome,
+                    backgroundColor: "rgba(255, 99, 132, 0.5)",
+                },
+            ],
+        };
+
+        res.status(200).json(data);
+    });
+});
+
 module.exports = router;
