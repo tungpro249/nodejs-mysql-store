@@ -53,12 +53,12 @@ router.get('/total-incomes', (req, res) => {
 
         const data = {
             labels: [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
+                "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+                "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
             ],
             datasets: [
                 {
-                    label: "Thống kê tổng tiền mỗi tháng",
+                    label: "Tổng tiền mỗi tháng",
                     data: monthlyIncome,
                     backgroundColor: "rgba(255, 99, 132, 0.5)",
                 },

@@ -80,18 +80,95 @@ const addToCart = (req, res) => {
 };
 
 // Sửa số lượng sản phẩm trong giỏ hàng
-const updateCartItem = (req, res) => {
+const increaseCartItem = (req, res) => {
     const cartItemId = req.params.cartItemId;
     const { quantity } = req.body;
 
+    // Truy vấn để lấy giá trị quantity từ cơ sở dữ liệu
     dbConn.query(
-        'UPDATE cart_items SET quantity = ? WHERE id = ?',
-        [quantity, cartItemId],
+        "SELECT ci.quantity AS currentQuantity, p.quantity AS productQuantity FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.id = ?",
+        [cartItemId],
         (error, results) => {
             if (error) {
                 throw error;
             }
-            res.status(200).json({ message: 'Cập nhật số lượng thành công.', data: { quantity } });
+
+            if (results.length === 0) {
+                // Không tìm thấy mặt hàng trong giỏ hàng
+                res.status(404).json({ error: "Mặt hàng không tồn tại trong giỏ hàng." });
+                return;
+            }
+
+            const currentQuantity = results[0].currentQuantity;
+            const productQuantity = results[0].productQuantity;
+
+            if (quantity > productQuantity) {
+                // Số lượng truyền lên lớn hơn số lượng sản phẩm có sẵn trong kho
+                res.status(400).json({ error: "Số lượng vượt quá số lượng sản phẩm có sẵn trong kho." });
+                return;
+            }
+
+            if (quantity <= currentQuantity) {
+                // Số lượng truyền lên nhỏ hơn hoặc bằng số lượng hiện tại trong giỏ hàng, không cần cập nhật
+                res.status(200).json({ message: "Không cần cập nhật số lượng.", data: { quantity: currentQuantity } });
+                return;
+            }
+
+            // Tiến hành cập nhật số lượng
+            dbConn.query(
+                "UPDATE cart_items SET quantity = ? WHERE id = ?",
+                [quantity, cartItemId],
+                (updateError, updateResults) => {
+                    if (updateError) {
+                        throw updateError;
+                    }
+                    res.status(200).json({ message: "Cập nhật số lượng thành công.", data: { quantity } });
+                }
+            );
+        }
+    );
+};
+
+const decreaseCartItem = (req, res) => {
+    const cartItemId = req.params.cartItemId;
+    const { quantity } = req.body;
+
+    // Truy vấn để lấy giá trị quantity từ cơ sở dữ liệu
+    dbConn.query(
+        "SELECT ci.quantity AS currentQuantity, p.quantity AS productQuantity FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.id = ?",
+        [cartItemId],
+        (error, results) => {
+            if (error) {
+                throw error;
+            }
+
+            if (results.length === 0) {
+                // Không tìm thấy mặt hàng trong giỏ hàng
+                res.status(404).json({ error: "Mặt hàng không tồn tại trong giỏ hàng." });
+                return;
+            }
+
+            const currentQuantity = results[0].currentQuantity;
+            const productQuantity = results[0].productQuantity;
+
+            if (quantity > currentQuantity) {
+                // Số lượng truyền lên lớn hơn số lượng hiện tại trong giỏ hàng, không cần cập nhật
+                res.status(400).json({ error: "Số lượng không hợp lệ." });
+                return;
+            }
+
+            // Tiến hành cập nhật số lượng
+            const newQuantity = quantity;
+            dbConn.query(
+                "UPDATE cart_items SET quantity = ? WHERE id = ?",
+                [newQuantity, cartItemId],
+                (updateError, updateResults) => {
+                    if (updateError) {
+                        throw updateError;
+                    }
+                    res.status(200).json({ message: "Cập nhật số lượng thành công.", data: { quantity: quantity } });
+                }
+            );
         }
     );
 };
@@ -125,7 +202,8 @@ const getAllCarts = (req, res) => {
 module.exports = {
     getCart,
     addToCart,
-    updateCartItem,
+    increaseCartItem,
     removeFromCart,
     getAllCarts,
+    decreaseCartItem,
 };
