@@ -21,7 +21,9 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",
+    "mysql2": "^3.6.5",
     "nodemailer": "^6.9.6",
+    "nodemon": "^3.0.1",
     "prettier": "^2.8.8",
     "util": "^0.12.5"
   }
