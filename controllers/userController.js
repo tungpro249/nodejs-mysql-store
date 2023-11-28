@@ -149,7 +149,6 @@ const generateResetToken = async (email) => {
 
 // Hàm kiểm tra tính hợp lệ của resetToken
 const validateResetToken = (resetToken) => {
-    console.log("vao day")
     return new Promise((resolve, reject) => {
         // Thực hiện kiểm tra tính hợp lệ của resetToken ở đây
         // Ví dụ: Kiểm tra trong cơ sở dữ liệu xem resetToken có tồn tại và chưa hết hạn hay không

@@ -10,5 +10,4 @@ router.post("/reset-password", resetPassword);
 router.put('/change-info/:id', changeInfo);
 router.get("/get-info/:id", getInfo);
 
-
 module.exports = router;

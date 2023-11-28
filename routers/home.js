@@ -24,7 +24,6 @@ router.get("/stats", (req, res) => {
             totalUsers: result[0].totalUsers,
             totalRevenue: result[0].totalRevenue,
         };
-
         res.json(stats);
     });
 });
@@ -34,7 +33,7 @@ router.get('/total-incomes', (req, res) => {
     SELECT MONTH(o.date_created) AS month, SUM(oi.price * oi.quantity) AS total_income
     FROM orders o
     JOIN order_items oi ON o.id = oi.order_id
-    WHERE o.status = 'đang xử lý'
+    WHERE o.status = 'Đã thanh toán'
     GROUP BY MONTH(o.date_created)
   `;
 
