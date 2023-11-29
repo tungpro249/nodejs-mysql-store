@@ -184,7 +184,7 @@ const sendPasswordResetEmail = async (email, resetToken) => {
         service: 'gmail',
         auth: {
             user: 'tungt392@gmail.com',
-            pass: 'grjs xutf gbui nooe',
+            pass: 'gebt zvli kdry eyox',
         },
     });
     const resetLink = `http://localhost:3000/reset-password?email=${email}&resetToken=${resetToken}`
