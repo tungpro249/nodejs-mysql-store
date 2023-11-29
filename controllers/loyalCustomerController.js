@@ -6,7 +6,7 @@ const addCustomerAndSendEmail = async (email) => {
         service: 'gmail',
         auth: {
             user: 'tungt392@gmail.com',
-            pass: 'grjs xutf gbui nooe',
+            pass: 'gebt zvli kdry eyox',
         },
     });
     const insertQuery = 'INSERT INTO loyal_customers (email, first_name, last_name) VALUES (?, ?, ?)';

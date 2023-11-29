@@ -4,12 +4,15 @@ const router = express.Router();
 
 router.get("/stats", (req, res) => {
     const query = `
-    SELECT
-      (SELECT COUNT(*) FROM orders) AS totalOrders,
-      (SELECT COUNT(*) FROM products) AS totalProducts,
-      (SELECT COUNT(*) FROM users) AS totalUsers,
-      (SELECT SUM(quantity * price) FROM order_items) AS totalRevenue
-  `;
+        SELECT
+            (SELECT COUNT(*) FROM orders) AS totalOrders,
+            (SELECT COUNT(*) FROM products) AS totalProducts,
+            (SELECT COUNT(*) FROM users) AS totalUsers,
+            (SELECT SUM(order_items.quantity * order_items.price) 
+             FROM order_items 
+             JOIN orders ON order_items.order_id = orders.id 
+             WHERE orders.status = 'đã thanh toán') AS totalRevenue
+    `;
 
     dbConn.query(query, (err, result) => {
         if (err) {
@@ -21,8 +24,8 @@ router.get("/stats", (req, res) => {
         const stats = {
             totalOrders: result[0].totalOrders,
             totalProducts: result[0].totalProducts,
-            totalUsers: result[0].totalUsers,
-            totalRevenue: result[0].totalRevenue,
+            totalUsers: result[0].totalUsers - 1,
+            totalRevenue: result[0].totalRevenue || 0,
         };
         res.json(stats);
     });

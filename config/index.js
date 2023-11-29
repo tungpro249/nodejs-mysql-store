@@ -52,7 +52,7 @@ const createTable = (con) => {
       quantity INT,
       category_id INT,
       isNew BOOLEAN,
-      create_at DATE,
+      created_at DATE,
       FOREIGN KEY (category_id) REFERENCES categories(id)
     )`
     con.query(createProductsTableQuery, (err, result) => {
