@@ -238,11 +238,13 @@ const resetPassword = async (req, res) => {
         }
 
         const selectSql = 'SELECT * FROM users WHERE email = ? AND generate_code = ?';
-        const [rows] = await dbConn.query(selectSql, [email, resetToken]);
+        const rows = await dbConn.query(selectSql, [email, resetToken]);
         if (rows.length === 0) {
             return res.status(400).json({ message: 'INVALID_RESET_TOKEN' });
         }
-        await updatePassword(email, newPassword); // Update the password directly using the email
+
+        const hashedPassword = await hashPassword(newPassword, saltRounds);
+        await updatePassword(email, hashedPassword);
 
         const updateSql = 'UPDATE users SET generate_code = NULL WHERE email = ?';
         await dbConn.query(updateSql, [email]);
