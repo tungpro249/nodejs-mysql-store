@@ -23,6 +23,6 @@ app.use("/api/loyal", require("./routers/loyalCustomer"));
 app.use("/api", require("./routers/loyalCustomer"));
 app.use("/api", require("./routers/home"));
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT || 8000, () => {
     console.log(`Server started on port ${process.env.PORT}...`);
 });
