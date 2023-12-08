@@ -99,7 +99,7 @@ const getOrderDetails = (req, res) => {
         const userId = req.params.id;
 
         const query = `
-            SELECT users.first_name, users.last_name, users.email, users.phone, products.name AS product_name, order_items.quantity, order_items.price, orders.status
+            SELECT users.first_name, users.last_name, users.email, users.phone, products.name AS product_name, order_items.quantity, order_items.price, orders.status, orders.date_created
             FROM orders
             JOIN users ON orders.user_id = users.id
             JOIN order_items ON orders.id = order_items.order_id
@@ -117,6 +117,8 @@ const getOrderDetails = (req, res) => {
             }
 
             const orderDetails = results.map((result) => {
+                const formattedDate = new Date(result.date_created).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+
                 return {
                     user_name: `${result.first_name} ${result.last_name}`,
                     email: result.email,
@@ -125,6 +127,7 @@ const getOrderDetails = (req, res) => {
                     quantity: result.quantity,
                     price: result.price,
                     status: result.status,
+                    date_created: formattedDate
                 };
             });
 

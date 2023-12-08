@@ -1,23 +1,23 @@
-const mysql = require("mysql2");
+const mysql = require("mysql");
 const connection = mysql.createConnection({
     host: "localhost",
-    user: "admin",
-    password: "Admin@123",
+    user: "root",
+    password: "tungpro249",
     database: "doantotnghiep",
 });
 
 const createTable = (con) => {
     // create user
     const createUsersTableQuery = `CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      username VARCHAR(255) NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL,
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      pass_word VARCHAR(255),
+      email VARCHAR(255),
       first_name VARCHAR(255),
       last_name VARCHAR(255),
       address VARCHAR(255),
-      phone VARCHAR(255),
-      generate_code VARCHAR(255)
+      phone VARCHAR(20),
+      generate_code VARCHAR(255),
+      role INT DEFAULT 0
     )`
     con.query(createUsersTableQuery, (err, result) => {
         if(err) throw err;
@@ -30,8 +30,8 @@ const createTable = (con) => {
 
     // create categories
     const createCategoriesTableQuery = `CREATE TABLE IF NOT EXISTS categories (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL
+     id INT PRIMARY KEY AUTO_INCREMENT,
+     name VARCHAR(255)
     )`
     con.query(createCategoriesTableQuery, (err, result) => {
         if(err) throw err;
@@ -44,15 +44,15 @@ const createTable = (con) => {
 
     // create product
     const createProductsTableQuery = `CREATE TABLE IF NOT EXISTS products (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
+     id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255),
       description TEXT,
       image VARCHAR(255),
       price DECIMAL(10, 2),
       quantity INT,
       category_id INT,
       isNew BOOLEAN,
-      create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at DATE,
       FOREIGN KEY (category_id) REFERENCES categories(id)
     )`
     con.query(createProductsTableQuery, (err, result) => {
@@ -66,9 +66,9 @@ const createTable = (con) => {
 
     // create orders
     const createOrdersTableQuery = `CREATE TABLE IF NOT EXISTS orders (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       user_id INT,
-      date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      date_created DATE,
       status VARCHAR(255),
       FOREIGN KEY (user_id) REFERENCES users(id)
     )`
@@ -83,7 +83,7 @@ const createTable = (con) => {
 
     // create order_items
     const createOrderItemsTableQuery = `CREATE TABLE IF NOT EXISTS order_items (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       order_id INT,
       product_id INT,
       quantity INT,
@@ -102,7 +102,7 @@ const createTable = (con) => {
 
     // create carts
     const createCartsTableQuery = `CREATE TABLE IF NOT EXISTS carts (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       user_id INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
@@ -118,7 +118,7 @@ const createTable = (con) => {
 
     // create carts
     const createCartItemsTableQuery = `CREATE TABLE IF NOT EXISTS cart_items (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       cart_id INT,
       product_id INT,
       quantity INT,
@@ -131,6 +131,22 @@ const createTable = (con) => {
             console.log("Table cart_items created");
         } else {
             console.log("Table cart_items already exists");
+        }
+    })
+    // create loyal_customers
+    const createLoyalCustomersTableQuery = `CREATE TABLE IF NOT EXISTS loyal_customers  (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      email VARCHAR(255),
+      first_name VARCHAR(255),
+      last_name VARCHAR(255),
+      date_registered DATE
+    )`
+    con.query(createLoyalCustomersTableQuery, (err, result) => {
+        if(err) throw err;
+        if(result.warningCount === 0) {
+            console.log("Table loyal_customers created");
+        } else {
+            console.log("Table loyal_customers already exists");
         }
     })
 }

@@ -133,6 +133,7 @@ const checkEmailExists = (email) => {
     });
 };
 
+
 // Function to generate a reset token and save it in the user's generate_code field
 const generateResetToken = async (email) => {
     try {
@@ -150,9 +151,6 @@ const generateResetToken = async (email) => {
 // Hàm kiểm tra tính hợp lệ của resetToken
 const validateResetToken = (resetToken) => {
     return new Promise((resolve, reject) => {
-        // Thực hiện kiểm tra tính hợp lệ của resetToken ở đây
-        // Ví dụ: Kiểm tra trong cơ sở dữ liệu xem resetToken có tồn tại và chưa hết hạn hay không
-
         // Giả sử resetToken hợp lệ nếu nó khác null và độ dài của resetToken lớn hơn 0
         const isValidToken = resetToken !== null && resetToken.length > 0;
         resolve(isValidToken); // Trả về kết quả tính hợp lệ của resetToken
@@ -167,7 +165,6 @@ const updatePassword = (email, newPassword) => {
             [newPassword, email],
             (error, results) => {
                 if (error) {
-                    console.log("dcm")
                     reject(error);
                 } else {
                     resolve();
@@ -183,13 +180,13 @@ const sendPasswordResetEmail = async (email, resetToken) => {
         service: 'gmail',
         auth: {
             user: 'tungt392@gmail.com',
-            pass: 'grjs xutf gbui nooe',
+            pass: 'gebt zvli kdry eyox',
         },
     });
     const resetLink = `http://localhost:3000/reset-password?email=${email}&resetToken=${resetToken}`
     const mailOptions = {
         from: 'Đoàn Thanh Tùng',
-        to: 'tungt392@gmail.com',
+        to: email,
         subject: 'Khôi phục mật khẩu',
         text: `Vui lòng truy cập đường dẫn sau để khôi phục mật khẩu:`,
         html: `Click <a href="${resetLink}">here</a> to reset your password.`
@@ -197,9 +194,9 @@ const sendPasswordResetEmail = async (email, resetToken) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully');
+        console.log('Email thông báo đã được gửi thành công');
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Gửi email lỗi:', error);
     }
 };
 
@@ -241,11 +238,13 @@ const resetPassword = async (req, res) => {
         }
 
         const selectSql = 'SELECT * FROM users WHERE email = ? AND generate_code = ?';
-        const [rows] = await dbConn.query(selectSql, [email, resetToken]);
+        const rows = await dbConn.query(selectSql, [email, resetToken]);
         if (rows.length === 0) {
             return res.status(400).json({ message: 'INVALID_RESET_TOKEN' });
         }
-        await updatePassword(email, newPassword); // Update the password directly using the email
+
+        const hashedPassword = await hashPassword(newPassword, saltRounds);
+        await updatePassword(email, hashedPassword);
 
         const updateSql = 'UPDATE users SET generate_code = NULL WHERE email = ?';
         await dbConn.query(updateSql, [email]);

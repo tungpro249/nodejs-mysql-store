@@ -1,7 +1,6 @@
 const dbConn = require("../config");
 const multer = require('multer');
 
-
 // Định nghĩa cấu hình cho multer
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -137,27 +136,47 @@ const updateProduct = (req, res) => {
     product.created_at = created_at;
     // Lưu trữ đường dẫn hình ảnh vào biến imageUrl
     const imageUrl = req.file ? req.file.path : null;
-    product.image = imageUrl;
 
+    if (imageUrl === null) {
+        // Trường hợp không có hình ảnh mới, giữ nguyên đường dẫn hình ảnh cũ
+        dbConn.query('SELECT image FROM products WHERE id = ?', [id], (error, results, fields) => {
+            if (error) {
+                console.error('Lỗi khi truy vấn cơ sở dữ liệu: ' + error.stack);
+                res.status(500).send('Lỗi khi cập nhật sản phẩm.');
+                return;
+            }
+
+            // Lấy đường dẫn hình ảnh cũ từ kết quả truy vấn
+            const oldImageUrl = results[0].image;
+
+            // Gán đường dẫn hình ảnh cũ vào product
+            product.image = oldImageUrl;
+
+            // Tiến hành cập nhật thông tin sản phẩm
+            performProductUpdate(id, product, res);
+        });
+    } else {
+        // Trường hợp có hình ảnh mới, cập nhật đường dẫn hình ảnh mới
+        product.image = imageUrl;
+
+        // Tiến hành cập nhật thông tin sản phẩm
+        performProductUpdate(id, product, res);
+    }
+};
+
+// Hàm thực hiện cập nhật thông tin sản phẩm
+const performProductUpdate = (id, product, res) => {
     dbConn.query('UPDATE products SET ? WHERE id = ?', [product, id], (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi cập nhật sản phẩm: ' + error.stack);
             res.status(500).send('Lỗi khi cập nhật sản phẩm.');
             return;
         }
+
         console.log('Cập nhật sản phẩm thành công.');
 
-        // Cập nhật đường dẫn hình ảnh trong cơ sở dữ liệu
-        dbConn.query('UPDATE products SET image = ? WHERE id = ?', [imageUrl, id], (error, results, fields) => {
-            if (error) {
-                console.error('Lỗi khi cập nhật đường dẫn hình ảnh: ' + error.stack);
-                res.status(500).send('Lỗi khi cập nhật đường dẫn hình ảnh.');
-                return;
-            }
-
-            // Trả về thông tin sản phẩm đã được cập nhật
-            res.status(200).json({ message: 'Cập nhật sản phẩm thành công.', data: { id, ...product, image: imageUrl } });
-        });
+        // Trả về thông tin sản phẩm đã được cập nhật
+        res.status(200).json({ message: 'Cập nhật sản phẩm thành công.', data: { id, ...product, image: product.image } });
     });
 };
 

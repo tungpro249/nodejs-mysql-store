@@ -66,14 +66,45 @@ const addToCart = (req, res) => {
         if (error) {
             throw error;
         }
+
+        // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
         dbConn.query(
-            'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)',
-            [cartId, productId, quantity],
+            'SELECT * FROM cart_items WHERE cart_id = ? AND product_id = ?',
+            [cartId, productId],
             (error, results) => {
                 if (error) {
                     throw error;
                 }
-                res.send('Product added to cart successfully.');
+
+                if (results.length > 0) {
+                    // Nếu sản phẩm đã tồn tại trong giỏ hàng, tăng số lượng
+                    const existingCartItem = results[0];
+                    const newQuantity = existingCartItem.quantity + quantity;
+
+                    // Cập nhật số lượng sản phẩm trong giỏ hàng
+                    dbConn.query(
+                        'UPDATE cart_items SET quantity = ? WHERE id = ?',
+                        [newQuantity, existingCartItem.id],
+                        (error, results) => {
+                            if (error) {
+                                throw error;
+                            }
+                            res.send('Product quantity updated in cart successfully.');
+                        }
+                    );
+                } else {
+                    // Nếu sản phẩm chưa tồn tại trong giỏ hàng, thêm mới
+                    dbConn.query(
+                        'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)',
+                        [cartId, productId, quantity],
+                        (error, results) => {
+                            if (error) {
+                                throw error;
+                            }
+                            res.send('Product added to cart successfully.');
+                        }
+                    );
+                }
             }
         );
     });
@@ -154,6 +185,12 @@ const decreaseCartItem = (req, res) => {
             if (quantity > currentQuantity) {
                 // Số lượng truyền lên lớn hơn số lượng hiện tại trong giỏ hàng, không cần cập nhật
                 res.status(400).json({ error: "Số lượng không hợp lệ." });
+                return;
+            }
+
+            if (currentQuantity === 1 && quantity === 1) {
+                // Số lượng hiện tại và số lượng giảm về đều là 1, không giảm thêm được nữa
+                res.status(400).json({ error: "Không thể giảm số lượng thêm." });
                 return;
             }
 
