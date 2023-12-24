@@ -40,13 +40,13 @@ const loginUser = async (req, res) => {
 
         const user = await selectUserByEmail(email);
         if (user.length === 0) {
-            return res.status(401).json({ code: 0, message: "EMAIL_OR_PASSWORD_ERROR" });
+            return res.status(401).json({ code: 0, message: "Tài khoản hoặc mật khẩu sai" });
         }
 
         const hashedPassword = user[0].pass_word;
         const isMatch = await comparePassword(pass_word, hashedPassword);
         if (!isMatch) {
-            return res.status(401).json({ code: 0, message: "EMAIL_OR_PASSWORD_ERROR" });
+            return res.status(401).json({ code: 0, message: "Tài khoản hoặc mật khẩu sai" });
         }
 
         const data = {

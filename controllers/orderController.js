@@ -99,7 +99,7 @@ const getOrderDetails = (req, res) => {
         const userId = req.params.id;
 
         const query = `
-            SELECT users.first_name, users.last_name, users.email, users.phone, products.name AS product_name, order_items.quantity, order_items.price, orders.status, orders.date_created
+            SELECT users.first_name, users.last_name, users.email, users.phone, products.name AS product_name, order_items.quantity, order_items.price, orders.id, orders.status, orders.date_created
             FROM orders
             JOIN users ON orders.user_id = users.id
             JOIN order_items ON orders.id = order_items.order_id
@@ -120,6 +120,7 @@ const getOrderDetails = (req, res) => {
                 const formattedDate = new Date(result.date_created).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
                 return {
+                    order_id: result.id,
                     user_name: `${result.first_name} ${result.last_name}`,
                     email: result.email,
                     phone_number: result.phone,
@@ -205,24 +206,24 @@ const deleteOrder = (req, res) => {
     try {
         const orderId = req.params.id;
 
-        const deleteQuery = 'DELETE FROM orders WHERE id = ?';
-        const deleteValues = [orderId];
+        const updateQuery = 'UPDATE orders SET status = ? WHERE id = ?';
+        const updateValues = ['Hủy đơn hàng', orderId];
 
-        dbConn.query(deleteQuery, deleteValues, (error, result) => {
+        dbConn.query(updateQuery, updateValues, (error, result) => {
             if (error) {
-                console.error('Lỗi khi xóa đơn hàng:', error);
-                return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa đơn hàng.' });
+                console.error('Lỗi khi cập nhật trạng thái đơn hàng:', error);
+                return res.status(500).json({ error: 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng.' });
             }
 
             if (result.affectedRows === 0) {
                 return res.status(404).json({ error: 'Không tìm thấy đơn hàng.' });
             }
 
-            res.status(200).json({ message: 'Đơn hàng đã được xóa thành công.' });
+            res.status(200).json({ message: 'Trạng thái đơn hàng đã được cập nhật thành "Hủy đơn hàng".' });
         });
     } catch (error) {
-        console.error('Lỗi khi xóa đơn hàng:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa đơn hàng.' });
+        console.error('Lỗi khi cập nhật trạng thái đơn hàng:', error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng.' });
     }
 };
 

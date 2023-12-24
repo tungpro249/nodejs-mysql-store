@@ -81,27 +81,60 @@ const addToCart = (req, res) => {
                     const existingCartItem = results[0];
                     const newQuantity = existingCartItem.quantity + quantity;
 
-                    // Cập nhật số lượng sản phẩm trong giỏ hàng
+                    // Kiểm tra số lượng sản phẩm có sẵn trong kho
                     dbConn.query(
-                        'UPDATE cart_items SET quantity = ? WHERE id = ?',
-                        [newQuantity, existingCartItem.id],
-                        (error, results) => {
+                        'SELECT quantity FROM products WHERE id = ?',
+                        [productId],
+                        (error, productResults) => {
                             if (error) {
                                 throw error;
                             }
-                            res.send('Product quantity updated in cart successfully.');
+
+                            const availableQuantity = productResults[0].quantity;
+
+                            if (newQuantity > availableQuantity) {
+                                res.json({msg: 'Sản phẩm đã hết hàng trong kho.'});
+                            } else {
+                                // Cập nhật số lượng sản phẩm trong giỏ hàng
+                                dbConn.query(
+                                    'UPDATE cart_items SET quantity = ? WHERE id = ?',
+                                    [newQuantity, existingCartItem.id],
+                                    (error, results) => {
+                                        if (error) {
+                                            throw error;
+                                        }
+                                        res.json({msg: 'Số lượng giỏ hàng đã được cập nhật.'});
+                                    }
+                                );
+                            }
                         }
                     );
                 } else {
                     // Nếu sản phẩm chưa tồn tại trong giỏ hàng, thêm mới
                     dbConn.query(
-                        'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)',
-                        [cartId, productId, quantity],
-                        (error, results) => {
+                        'SELECT quantity FROM products WHERE id = ?',
+                        [productId],
+                        (error, productResults) => {
                             if (error) {
                                 throw error;
                             }
-                            res.send('Product added to cart successfully.');
+
+                            const availableQuantity = productResults[0].quantity;
+
+                            if (quantity > availableQuantity) {
+                                res.send('The product is out of stock.');
+                            } else {
+                                dbConn.query(
+                                    'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)',
+                                    [cartId, productId, quantity],
+                                    (error, results) => {
+                                        if (error) {
+                                            throw error;
+                                        }
+                                        res.send('Product added to cart successfully.');
+                                    }
+                                );
+                            }
                         }
                     );
                 }
