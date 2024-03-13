@@ -3,7 +3,7 @@ const connection = mysql.createConnection({
     host: "localhost",
     user: "root",
     password: "tungpro249",
-    database: "doantotnghiep",
+    database: "testdb",
 });
 
 const createTable = (con) => {
@@ -147,6 +147,45 @@ const createTable = (con) => {
             console.log("Table loyal_customers created");
         } else {
             console.log("Table loyal_customers already exists");
+        }
+    })
+
+    // create ratings
+    const createRatingsTableQuery = `CREATE TABLE IF NOT EXISTS ratings  (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT,
+        product_id INT,
+        rating INT,
+        review TEXT,
+        date_created DATE,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    )`
+    con.query(createRatingsTableQuery, (err, result) => {
+        if(err) throw err;
+        if(result.warningCount === 0) {
+            console.log("Table ratings created");
+        } else {
+            console.log("Table ratings already exists");
+        }
+    })
+
+     // create comments
+    const createCommentsTableQuery = `CREATE TABLE IF  NOT EXISTS comments(
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT,
+        product_id INT,
+        comment TEXT,
+        date_created DATE,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    );`
+    con.query(createCommentsTableQuery, (err, result) => {
+        if(err) throw err;
+        if(result.warningCount === 0) {
+            console.log("Table comments created");
+        } else {
+            console.log("Table comments already exists");
         }
     })
 }

@@ -14,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // routers
+app.use("/api/comments", require("./routers/comment"));
 app.use("/api/auth", require("./routers/user"));
 app.use("/api/categories", require("./routers/categories"));
 app.use("/api/products", require("./routers/products"));
