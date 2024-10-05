@@ -25,5 +25,5 @@ app.use("/api/brands", require("./routers/brands"));
 app.use("/api", require("./routers/home"));
 
 app.listen(process.env.PORT || 8000, () => {
-    console.log(`Server started on port ${process.env.PORT}...`);
+  console.log(`Server started on port ${process.env.PORT}...`);
 });
