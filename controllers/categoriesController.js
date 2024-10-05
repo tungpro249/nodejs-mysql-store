@@ -1,4 +1,7 @@
 const dbConn = require("../config");
+const uploadFile = require('../middleware/uploadMiddleware');
+
+const upload = uploadFile('categories');
 
 const getAllCategories = (req, res) => {
     dbConn.query('SELECT * FROM categories', (error, results, fields) => {
@@ -16,13 +19,18 @@ const getAllCategories = (req, res) => {
 const addNewCategory = (req, res) => {
     const { name } = req.body;
     const category = { name };
+    if (req.file) {
+        const imageUrl = req.file.path;
+        category.image = `${imageUrl}`; 
+    }
+    
     dbConn.query('INSERT INTO categories SET ?', category, (error, results, fields) => {
         if (error) {
             console.error('Lỗi khi thêm sản phẩm mới: ' + error.stack);
             res.status(500).send('Lỗi khi thêm sản phẩm mới.');
             return;
         }
-        console.log('Thêm sản phẩm mới thành công.');
+        console.log('category', category);
         // Trả về thông tin sản phẩm mới vừa thêm
         res.json({id: results.insertId, ...category});
     })
@@ -56,4 +64,4 @@ const deleteCategory = (req, res) => {
         res.status(200).json({"message": "Xóa danh mục thành công."});
     });
 };
-module.exports = {  getAllCategories, addNewCategory, updateCategory, deleteCategory };
+module.exports = {  getAllCategories, addNewCategory, updateCategory, deleteCategory, upload };

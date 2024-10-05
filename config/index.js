@@ -188,6 +188,21 @@ const createTable = (con) => {
             console.log("Table comments already exists");
         }
     })
+    // create brands
+const createBrandsTableQuery = `CREATE TABLE IF NOT EXISTS brands (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255),
+    logo VARCHAR(255)
+  )`
+  con.query(createBrandsTableQuery, (err, result) => {
+      if(err) throw err;
+      if(result.warningCount === 0) {
+          console.log("Table brands created");
+      } else {
+          console.log("Table brands already exists");
+      }
+  })
+  
 }
 
 connection.connect(function (error) {

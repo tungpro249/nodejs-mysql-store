@@ -4,6 +4,8 @@ const dbConn = require("../config");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require('crypto');
+const multer = require('multer');
+const path = require('path');
 
 const saltRounds = 10;
 const secretKey = process.env.SECRET_KEY;
@@ -56,6 +58,7 @@ const loginUser = async (req, res) => {
             first_name: user[0].first_name,
             phone: user[0].phone,
             address: user[0].address,
+            avatar: user[0].avatar,
         };
 
         if (user[0].role === 1) {
@@ -256,23 +259,43 @@ const resetPassword = async (req, res) => {
     }
 };
 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/avatars'); // Directory to store avatars
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`); // Unique filename
+    }
+});
+const upload = multer({ storage });
+// Controller function
 const changeInfo = (req, res) => {
-        const { id } = req.params; // Lấy id từ URL
-        const { phone, first_name, last_name, address } = req.body;
+    const { id } = req.params; // Get the user ID from URL
+    const { phone, first_name, last_name, address } = req.body;
+    let avatarUrl = null;
 
-        const query = 'UPDATE users SET phone = ?, first_name = ?, last_name = ?, address = ? WHERE id = ?';
+    if (req.file) {
+        avatarUrl = `/uploads/avatars/${req.file.filename}`; // Store the avatar file path
+    }
 
-        // Thực thi câu truy vấn SQL
-         dbConn.query(query, [phone, first_name, last_name,address, id], (err, result) => {
-            if (err) {
-                console.error(err);
-                res.status(500).send('Lỗi server');
-            } else {
-                res.send('Thông tin người dùng đã được cập nhật thành công');
-            }
-        });
+    const query = avatarUrl
+        ? 'UPDATE users SET phone = ?, first_name = ?, last_name = ?, address = ?, avatar = ? WHERE id = ?'
+        : 'UPDATE users SET phone = ?, first_name = ?, last_name = ?, address = ? WHERE id = ?';
+
+    const params = avatarUrl
+        ? [phone, first_name, last_name, address, avatarUrl, id]
+        : [phone, first_name, last_name, address, id];
+
+    // Execute the SQL query
+    dbConn.query(query, params, (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Lỗi server');
+        } else {
+            res.send('Thông tin người dùng đã được cập nhật thành công');
+        }
+    });
 };
-
 
 const getInfo = (req, res) => {
     const { id } = req.params; // Lấy id từ URL
@@ -292,7 +315,8 @@ const getInfo = (req, res) => {
                 lastName: user.last_name,
                 phone: user.phone,
                 email: user.email,
-                address: user.address
+                address: user.address,
+                avartar: user.avatar
             };
 
             res.json(userInfo);
@@ -307,5 +331,6 @@ module.exports = {
     forgotPassword,
     resetPassword,
     changeInfo,
-    getInfo
+    getInfo,
+    upload
 };

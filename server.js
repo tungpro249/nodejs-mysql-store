@@ -21,7 +21,7 @@ app.use("/api/products", require("./routers/products"));
 app.use("/api/carts", require("./routers/cart"));
 app.use("/api/orders", require("./routers/order"));
 app.use("/api/loyal", require("./routers/loyalCustomer"));
-app.use("/api", require("./routers/loyalCustomer"));
+app.use("/api/brands", require("./routers/brands"));
 app.use("/api", require("./routers/home"));
 
 app.listen(process.env.PORT || 8000, () => {
