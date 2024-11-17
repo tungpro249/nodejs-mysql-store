@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const {
   getAllProducts,
   addNewProduct,
@@ -6,13 +6,14 @@ const {
   deleteProduct,
   getProductDetails,
   upload,
-} = require("../controllers/productController");
+} = require('../controllers/productController');
+const {authenticateUser, checkAdmin} = require('../middleware/auth');
 const router = express.Router();
 
-router.get("/get-products", getAllProducts);
-router.get("/products/:id", getProductDetails);
-router.post("/add-product", upload.single("image"), addNewProduct);
-router.put("/update-product/:id", upload.single("image"), updateProduct);
+router.get('/get-products', getAllProducts);
+router.get('/products/:id', getProductDetails);
+router.post('/add-product', upload.single('image'), addNewProduct);
+router.put('/update-product/:id', upload.single('image'), updateProduct);
 router.delete(`/delete-product/:id`, deleteProduct);
 
 module.exports = router;

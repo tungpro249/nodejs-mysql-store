@@ -6,7 +6,7 @@ const {
   deleteOrder,
   getAllOrders,
   getOrderDetails,
-  fuck,
+  handleGuestCheckout,
 } = require("../controllers/orderController");
 const router = express.Router();
 
@@ -19,6 +19,6 @@ router.get("/order/:id", getOrderDetails);
 router.put("/orders/:id", updateOrder);
 router.delete("/orders/:id", deleteOrder);
 
-router.post("/place-order", fuck);
+router.post("/place-order", handleGuestCheckout);
 
 module.exports = router;

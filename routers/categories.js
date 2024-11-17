@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get("/get-categories", getAllCategories);
 router.post("/add-category", upload.single("image"), addNewCategory);
-router.put(`/update-category/:id`, updateCategory);
+router.put(`/update-category/:id`,upload.single("image"), updateCategory);
 router.delete("/delete-category/:id", deleteCategory);
 
 module.exports = router;

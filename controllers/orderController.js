@@ -279,7 +279,7 @@ const deleteOrder = (req, res) => {
   }
 };
 
-const fuck = (req, res) => {
+const handleGuestCheckout = (req, res) => {
   const userData = req.body.userData; // Thông tin người dùng không có tài khoản
   const items = req.body.items; // Danh sách các mặt hàng trong đơn hàng
 
@@ -351,5 +351,5 @@ module.exports = {
   deleteOrder,
   getAllOrders,
   getOrderDetails,
-  fuck,
+  handleGuestCheckout,
 };

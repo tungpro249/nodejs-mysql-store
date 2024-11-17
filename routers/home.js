@@ -1,8 +1,8 @@
-const express = require("express");
-const dbConn = require("../config");
+const express = require('express');
+const dbConn = require('../config');
 const router = express.Router();
 
-router.get("/stats", (req, res) => {
+router.get('/stats', (req, res) => {
   const query = `
         SELECT
             (SELECT COUNT(*) FROM orders) AS totalOrders,
@@ -16,7 +16,7 @@ router.get("/stats", (req, res) => {
 
   dbConn.query(query, (err, result) => {
     if (err) {
-      console.error("Error executing query:", err);
+      console.error('Error executing query:', err);
       res.sendStatus(500);
       return;
     }
@@ -31,7 +31,7 @@ router.get("/stats", (req, res) => {
   });
 });
 
-router.get("/total-incomes", (req, res) => {
+router.get('/total-incomes', (req, res) => {
   const query = `
     SELECT MONTH(o.date_created) AS month, SUM(oi.price * oi.quantity) AS total_income
     FROM orders o
@@ -42,8 +42,8 @@ router.get("/total-incomes", (req, res) => {
 
   dbConn.query(query, (error, results) => {
     if (error) {
-      console.error("Lỗi truy vấn cơ sở dữ liệu: " + error.stack);
-      res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
+      console.error('Lỗi truy vấn cơ sở dữ liệu: ' + error.stack);
+      res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu' });
       return;
     }
 
@@ -55,24 +55,24 @@ router.get("/total-incomes", (req, res) => {
 
     const data = {
       labels: [
-        "Tháng 1",
-        "Tháng 2",
-        "Tháng 3",
-        "Tháng 4",
-        "Tháng 5",
-        "Tháng 6",
-        "Tháng 7",
-        "Tháng 8",
-        "Tháng 9",
-        "Tháng 10",
-        "Tháng 11",
-        "Tháng 12",
+        'Tháng 1',
+        'Tháng 2',
+        'Tháng 3',
+        'Tháng 4',
+        'Tháng 5',
+        'Tháng 6',
+        'Tháng 7',
+        'Tháng 8',
+        'Tháng 9',
+        'Tháng 10',
+        'Tháng 11',
+        'Tháng 12',
       ],
       datasets: [
         {
-          label: "Tổng tiền mỗi tháng",
+          label: 'Tổng tiền mỗi tháng',
           data: monthlyIncome,
-          backgroundColor: "rgba(255, 99, 132, 0.5)",
+          backgroundColor: 'rgba(255, 99, 132, 0.5)',
         },
       ],
     };

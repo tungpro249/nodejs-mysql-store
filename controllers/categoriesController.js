@@ -1,19 +1,14 @@
-const dbConn = require("../config");
-const uploadFile = require("../middleware/uploadMiddleware");
+const uploadFile = require('../middleware/uploadMiddleware');
+import categoryServices from '../services/categorySevices';
+const upload = uploadFile('categories');
 
-const upload = uploadFile("categories");
-
-const getAllCategories = (req, res) => {
-  dbConn.query("SELECT * FROM categories", (error, results, fields) => {
-    if (error) {
-      console.error("Lỗi khi lấy dữ liệu sản phẩm: " + error.stack);
-      res.status(500).send("Lỗi khi lấy dữ liệu sản phẩm.");
-      return;
-    }
-    console.log("Lấy dữ liệu sản phẩm thành công.");
-    // Trả về danh sách sản phẩm
-    res.json(results);
-  });
+const getAllCategories = async (req, res) => {
+  try {
+    const category = await categoryServices.getAllCategories();
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi khi lấy tất cả danh mục' });
+  }
 };
 
 const addNewCategory = (req, res) => {
@@ -23,58 +18,41 @@ const addNewCategory = (req, res) => {
     const imageUrl = req.file.path;
     category.image = `${imageUrl}`;
   }
-
-  dbConn.query(
-    "INSERT INTO categories SET ?",
-    category,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Lỗi khi thêm sản phẩm mới: " + error.stack);
-        res.status(500).send("Lỗi khi thêm sản phẩm mới.");
-        return;
-      }
-      console.log("category", category);
-      // Trả về thông tin sản phẩm mới vừa thêm
-      res.json({ id: results.insertId, ...category });
-    },
-  );
+  try {
+    categoryServices.createCategory(category);
+    res.json({ message: 'Thêm danh mục thành công', category });
+  } catch (error) {
+    res.status(500).json({ error: 'Thêm danh mục thất bại' });
+  }
 };
 
 const updateCategory = (req, res) => {
   const id = req.params.id;
   const { name } = req.body;
-  const product = { name };
-  dbConn.query(
-    "UPDATE categories SET ? WHERE id = ?",
-    [product, id],
-    (error, results, fields) => {
-      if (error) {
-        console.error("Lỗi khi cập nhật sản phẩm: " + error.stack);
-        res.status(500).send("Lỗi khi cập nhật sản phẩm.");
-        return;
-      }
-      console.log("Cập nhật sản phẩm thành công.");
-      // Trả về thông tin sản phẩm đã được cập nhật
-      res.json({ id, ...product });
-    },
-  );
+  const category = { name };
+  if (req.file) {
+    const imageUrl = req.file.path;
+    category.image = `${imageUrl}`;
+  }
+  try {
+    categoryServices.updateCategory(id, category);
+    res.json({
+      message: 'Cập nhật danh mục thành công',
+      data: { id, ...category },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Cập nhật danh mục thất bại' });
+  }
 };
 
 const deleteCategory = (req, res) => {
   const id = req.params.id;
-  dbConn.query(
-    "DELETE FROM categories WHERE id = ?",
-    id,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Lỗi khi xóa danh mục: " + error.stack);
-        res.status(500).send("Lỗi khi xóa danh mục.");
-        return;
-      }
-      console.log("Xóa danh mục thành công.");
-      res.status(200).json({ message: "Xóa danh mục thành công." });
-    },
-  );
+  try {
+    categoryServices.deleteCategory(id);
+    res.json({ message: 'Xóa danh mục thành công' });
+  } catch (error) {
+    res.status(500).json({ error: 'Xóa danh mục thất bại' });
+  }
 };
 module.exports = {
   getAllCategories,
